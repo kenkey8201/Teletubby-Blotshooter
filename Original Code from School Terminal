@@ -1,0 +1,197 @@
+'''The theme of Teletubby Throwers is the hit 1990s show The Teletubbies that 
+premiered on BBC from 1998 to 2001. Its characters include the Sun Baby (featured
+in the title screen), Po (the red one), Tinky Winky (the purple one), La-La (the
+yellow one) and Dipsy (the green one)
+
+The links used are displayed below:
+ 8 bit avatars - https://www.deviantart.com/inkylilly/art/Teletubbies-in-8-bit-979161060
+ sun baby - https://tinyurl.com/sunbabyfromteletubby
+ website used to pixelate sun baby - https://giventofly.github.io/pixelit/#tryit'''
+ 
+
+from cmu_graphics import *
+import random
+
+def titleScreen_redrawAll(app):
+    drawImage(app.titleImageURL, app.width//2, app.height//2, align='center', width=app.titleImageWidth//2, height=app.titleImageHeight//1.5)
+    drawLabel('Teletubby', app.width//2, 20, fill = 'blue', border = 'pink', borderWidth=3, font = 'montserrat', bold=True, size=40)
+    drawLabel('Throwers', app.width//2, 60, fill = 'blue', border = 'pink', borderWidth=3, font = 'montserrat', bold=True, size=40)
+    drawLabel('Click with the mouse to begin!', app.width//2, 375, font = 'montserrat', size=32)
+    
+def getName(app, s):
+    if 'po' in s:
+        return 'Po'
+    elif 'tinky' in s:
+        return 'Tinky Winky'
+    elif 'dipsy' in s:
+        return 'Dipsy'
+    elif 'laa' in s:
+        return 'Laa-Laa'
+        
+    
+def titleScreen_onScreenActivate(app):
+    app.titleImageURL = 'https://github.com/kenkey8201/Images-for-15-112/blob/main/pxArt.png?raw=true'
+    app.titleImageWidth, app.titleImageHeight = getImageSize(app.titleImageURL)
+
+def titleScreen_onMousePress(app, mouseX, mouseY):
+    setActiveScreen('playScreen')
+    
+def distance(x0, y0, x1, y1):
+    return ((x1-x0)**2 + (y1-y0)**2)**0.5
+
+def restart(app):
+    app.bgcolor = rgb(155, 190, 195)
+    app.buildings = 10
+    app.bWidth = app.width / app.buildings
+    minHeight = 50
+    maxHeight = app.height/2
+    app.bHeight = [random.randrange(minHeight, maxHeight) for b in range(app.buildings)] 
+    app.colorOptions = ['paleGreen', 'lightGreen', 'greenYellow', 'yellowGreen', 'mediumSpringGreen', 'chartreuse',
+                        'springGreen', 'lawnGreen', 'mediumSeaGreen', 'limeGreen', 'oliveDrab', 'seaGreen', 'lime',
+                        'darkOliveGreen', 'forestGreen', 'green', 'darkGreen']
+    app.bColors = [random.choice(app.colorOptions) for b in range(app.buildings)]
+    
+    app.pRadius = 30
+    app.px0 = app.bWidth/2
+    app.py0 = app.height - app.bHeight[0] - app.pRadius 
+    app.pFill0 = 'red'
+    app.p0Chars = ['https://github.com/kenkey8201/Images-for-15-112/blob/main/8%20bit%20tinky%20winky.jpg?raw=true',
+                  'https://github.com/kenkey8201/Images-for-15-112/blob/main/8%20bit%20po.jpg?raw=true',
+                  'https://github.com/kenkey8201/Images-for-15-112/blob/main/8%20bit%20laa-laa.jpg?raw=true'
+                  'https://github.com/kenkey8201/Images-for-15-112/blob/main/8%20bit%20dipsy.jpg?raw=true']
+    app.p0Char = random.choice(app.p0Chars)
+    app.p0CharWidth, app.p0CharHeight = getImageSize(app.p0Char)
+    app.p0Name = getName(app, app.p0Char)
+    
+    app.px1 = app.width - app.bWidth /2
+    app.py1 = app.height - app.bHeight[-1] - app.pRadius
+    app.pFill1 = 'magenta'
+    app.p1Chars = ['https://github.com/kenkey8201/Images-for-15-112/blob/main/8%20bit%20tinky%20winky%20flipped.jpg?raw=true',
+                   'https://github.com/kenkey8201/Images-for-15-112/blob/main/8%20bit%20po%20flipped.jpg?raw=true',
+                   'https://github.com/kenkey8201/Images-for-15-112/blob/main/8%20bit%20laa-laa%20flipped.jpg?raw=true',
+                   'https://github.com/kenkey8201/Images-for-15-112/blob/main/8%20bit%20dipsy%20flipped.jpg?raw=true']
+    app.p1Char = random.choice(app.p1Chars)
+    app.p1CharWidth, app.p1CharHeight = getImageSize(app.p1Char)
+    app.p1Name = getName(app, app.p1Char)
+                   
+    app.players = [[app.px0, app.py0, app.pFill0, app.p0Name], [app.px1, app.py1, app.pFill1, app.p1Name]]
+
+    
+
+    app.blotFill = None
+    app.blotR = 10
+    app.currentPlayer = 0
+    app.force = 0.03
+    app.stepsPerSecond = 40
+    
+    app.gameOver = False
+    app.holes = []
+    app.holeRadius = 30
+    
+    
+def onAppStart(app):
+    restart(app)
+   
+
+def playScreen_onMousePress(app, mouseX,mouseY):
+    if app.blotFill == None and app.gameOver == False:
+        app.blotX, app.blotY, app.blotFill = app.players[app.currentPlayer][0], app.players[app.currentPlayer][1], app.players[app.currentPlayer][2]
+        app.blotDx = (mouseX - app.blotX) * app.force
+        app.blotDy = (mouseY - app.blotY) * app.force
+
+        
+def playScreen_onStep(app):
+    if app.blotFill != None:
+        app.blotX += app.blotDx
+        app.blotY += app.blotDy
+        app.blotDy += 0.2
+            # IF blot goes offscreen
+        if (app.blotX < 0 - app.blotR) or (app.blotX > app.width + app.blotR) or (app.blotY > app.height + app.blotR):
+            app.blotFill = None  
+            nextPlayer(app)
+        
+        otherPlayer = 1 - app.currentPlayer
+        otherX, otherY, otherFill = app.players[otherPlayer][0], app.players[otherPlayer][1], app.players[otherPlayer][2]
+        if distance(app.blotX, app.blotY, otherX, otherY) < app.blotR + app.pRadius:
+            app.gameOver = True
+            app.blotFill = None
+            app.holes.append([app.blotX, app.blotY])
+    #if blot inside a hold
+        for i in range(len(app.holes)):
+            holeX, holeY = app.holes[i]
+            if distance(app.blotX, app.blotY, holeX, holeY) < app.holeRadius - app.blotR:
+                return
+        
+    # if blot hits building    
+        for i in range(app.buildings):
+            left = i * app.bWidth 
+            top = app.height - app.bHeight[i] 
+            bottom = app.height
+            right = left + app.bWidth
+            if (left <= app.blotX <= right) and (top<= app.blotY <= bottom):
+                app.holes.append([app.blotX, app.blotY])
+                app.blotFill = None
+                nextPlayer(app)
+                return
+       
+        
+
+def nextPlayer(app):
+    app.currentPlayer = 1 - app.currentPlayer
+    
+
+def playScreen_onKeyPress(app, key):
+    if key == 'r' and app.gameOver:
+        restart(app)
+    elif key == 'q' and app.gameOver:
+        setActiveScreen('titleScreen')
+        restart(app)
+    
+
+def playScreen_redrawAll(app):
+    drawBackground(app)
+    drawBuildings(app)
+    drawHoles(app)
+    drawBlot(app)
+    drawPlayers(app)
+    drawGameOver(app)
+    if app.gameOver == False:
+        drawPlayerTurn(app)
+
+def drawPlayerTurn(app):
+    drawLabel(f"{app.players[app.currentPlayer][3]}'s Turn", app.width/2, app.height/8, size=16)
+    
+def drawBlot(app):
+    if app.blotFill != None:
+        drawCircle(app.blotX, app.blotY, app.blotR, fill = app.blotFill)
+
+def drawPlayers(app):
+    drawImage(app.p0Char, app.px0, app.py0, align='bottom', height = app.p0CharHeight//5, width=app.p0CharWidth//5)
+    drawImage(app.p1Char, app.px1, app.py1, align='bottom', height = app.p1CharHeight//5, width=app.p1CharWidth//5)
+    
+def drawBackground(app):
+    drawRect(0, 0, app.width, app.height, fill = rgb(155, 190, 195))
+
+def drawBuildings(app):
+    for i in range(app.buildings):
+        left = i * app.bWidth 
+        top = app.height - app.bHeight[i] 
+        width = app.bWidth
+        height = app.bHeight[i]
+        drawRect(left, top, width, height, fill = app.bColors[i], border = 'black')
+
+def drawGameOver(app):
+    if app.gameOver:
+        drawLabel(f'{app.players[app.currentPlayer][3]} wins', app.width/2, 50, size = 40, fill = 'red')
+        drawLabel("Press 'r' to start a new game or 'q' to return to title Screen", app.width//2, 150, size=20, fill='red')
+        
+
+def drawHoles(app):
+    for i in range(len(app.holes)):
+        x, y = app.holes[i]
+        drawCircle(x, y, app.holeRadius, fill = app.bgcolor)
+        
+def main():
+    runAppWithScreens(initialScreen='titleScreen', width = 500, height = 400)
+
+main()    
